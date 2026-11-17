@@ -2,6 +2,7 @@ import React from "react";
 import { vi } from "vitest";
 
 import { reseed } from "@excalidraw/common";
+import { CaptureUpdateAction } from "@excalidraw/element";
 
 import { reconcileElements } from "../data/reconcile";
 import { Excalidraw } from "../index";
@@ -80,7 +81,10 @@ describe("Test <App/>", () => {
       }) as any;
 
     React.act(() => {
-      api.updateScene({ elements: [remoteRect(10)] });
+      api.updateScene({
+        elements: [remoteRect(10)],
+        captureUpdate: CaptureUpdateAction.NEVER,
+      });
     });
 
     let local = api.getSceneElements().find(
@@ -91,6 +95,7 @@ describe("Test <App/>", () => {
       React.act(() => {
         api.updateScene({
           elements: [{ ...local, index: undefined }],
+          captureUpdate: CaptureUpdateAction.NEVER,
         });
       });
 

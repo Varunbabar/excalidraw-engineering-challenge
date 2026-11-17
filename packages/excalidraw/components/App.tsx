@@ -5033,7 +5033,10 @@ class App extends React.Component<AppProps, AppState> {
       }
 
       if (elements) {
-        this.scene.replaceAllElements(elements);
+        this.scene.replaceAllElements(elements, {
+          preserveElementVersions:
+            captureUpdate === CaptureUpdateAction.NEVER ? true : undefined,
+        });
       }
 
       if (collaborators) {

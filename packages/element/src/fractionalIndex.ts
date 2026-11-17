@@ -222,19 +222,22 @@ export const syncMovedIndices = (
  */
 export const syncInvalidIndices = <T extends ExcalidrawElement>(
   elements: readonly T[],
+  options?: { preserveElementVersions?: true },
 ): Ordered<T>[] => {
   const elementsMap = arrayToMap(elements);
   const indicesGroups = getInvalidIndicesGroups(elements);
   const elementsUpdates = generateIndices(elements, indicesGroups);
 
   for (const [element, { index }] of elementsUpdates) {
-    const { version, versionNonce, updated } = element;
-
-    mutateElement(element, elementsMap, { index });
-
-    element.version = version;
-    element.versionNonce = versionNonce;
-    element.updated = updated;
+    if (options?.preserveElementVersions) {
+      const { version, versionNonce, updated } = element;
+      mutateElement(element, elementsMap, { index });
+      element.version = version;
+      element.versionNonce = versionNonce;
+      element.updated = updated;
+    } else {
+      mutateElement(element, elementsMap, { index });
+    }
   }
 
   return elements as Ordered<T>[];
