@@ -228,7 +228,13 @@ export const syncInvalidIndices = <T extends ExcalidrawElement>(
   const elementsUpdates = generateIndices(elements, indicesGroups);
 
   for (const [element, { index }] of elementsUpdates) {
+    const { version, versionNonce, updated } = element;
+
     mutateElement(element, elementsMap, { index });
+
+    element.version = version;
+    element.versionNonce = versionNonce;
+    element.updated = updated;
   }
 
   return elements as Ordered<T>[];
