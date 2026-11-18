@@ -1,124 +1,133 @@
-<a href="https://excalidraw.com/" target="_blank" rel="noopener">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" alt="Excalidraw" srcset="https://excalidraw.nyc3.cdn.digitaloceanspaces.com/github/excalidraw_github_cover_2_dark.png" />
-    <img alt="Excalidraw" src="https://excalidraw.nyc3.cdn.digitaloceanspaces.com/github/excalidraw_github_cover_2.png" />
-  </picture>
-</a>
+# Excalidraw – Engineering Challenge Contribution
 
-<h4 align="center">
-  <a href="https://excalidraw.com">Excalidraw Editor</a> |
-  <a href="https://plus.excalidraw.com/blog">Blog</a> |
-  <a href="https://docs.excalidraw.com">Documentation</a> |
-  <a href="https://plus.excalidraw.com">Excalidraw+</a>
-</h4>
+A contribution to [Excalidraw](https://github.com/excalidraw/excalidraw), an open-source virtual whiteboard for sketching hand-drawn-like diagrams.
 
-<div align="center">
-  <h2>
-    An open source virtual hand-drawn style whiteboard. </br>
-    Collaborative and end-to-end encrypted. </br>
-  <br />
-  </h2>
-</div>
+This repository contains my engineering challenge work, focused on investigating and fixing an issue in Excalidraw's scene-update and fractional-index handling logic.
 
-<br />
-<p align="center">
-  <a href="https://github.com/excalidraw/excalidraw/blob/master/LICENSE">
-    <img alt="Excalidraw is released under the MIT license." src="https://img.shields.io/badge/license-MIT-blue.svg"  /></a>
-  <a href="https://www.npmjs.com/package/@excalidraw/excalidraw">
-    <img alt="npm downloads/month" src="https://img.shields.io/npm/dm/@excalidraw/excalidraw"  /></a>
-  <a href="https://docs.excalidraw.com/docs/introduction/contributing">
-    <img alt="PRs welcome!" src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat"  /></a>
-  <a href="https://discord.gg/UexuTaE">
-    <img alt="Chat on Discord" src="https://img.shields.io/discord/723672430744174682?color=738ad6&label=Chat%20on%20Discord&logo=discord&logoColor=ffffff&widget=false"/></a>
-  <a href="https://deepwiki.com/excalidraw/excalidraw">
-    <img alt="Ask DeepWiki" src="https://deepwiki.com/badge.svg" /></a>
-  <a href="https://twitter.com/excalidraw">
-    <img alt="Follow Excalidraw on Twitter" src="https://img.shields.io/twitter/follow/excalidraw.svg?label=follow+@excalidraw&style=social&logo=twitter"/></a>
-</p>
+## Project Overview
 
-<div align="center">
-  <figure>
-    <a href="https://excalidraw.com" target="_blank" rel="noopener">
-      <img src="https://excalidraw.nyc3.cdn.digitaloceanspaces.com/github%2Fproduct_showcase.png" alt="Product showcase" />
-    </a>
-    <figcaption>
-      <p align="center">
-        Create beautiful hand-drawn like diagrams, wireframes, or whatever you like.
-      </p>
-    </figcaption>
-  </figure>
-</div>
+**Excalidraw** is an open-source, collaborative whiteboard application that allows users to create diagrams, sketches, and visual explanations with a hand-drawn appearance.
 
-## Features
+The codebase uses TypeScript and React, with functionality for:
+- Creating and editing visual elements.
+- Managing scene data and element states.
+- Collaborative editing and remote scene updates.
+- Synchronizing changes between users.
+- Maintaining element ordering through fractional indices.
 
-The Excalidraw editor (npm package) supports:
+**Original repository:** https://github.com/excalidraw/excalidraw
 
-- 💯&nbsp;Free & open-source.
-- 🎨&nbsp;Infinite, canvas-based whiteboard.
-- ✍️&nbsp;Hand-drawn like style.
-- 🌓&nbsp;Dark mode.
-- 🏗️&nbsp;Customizable.
-- 📷&nbsp;Image support.
-- 😀&nbsp;Shape libraries support.
-- 🌐&nbsp;Localization (i18n) support.
-- 🖼️&nbsp;Export to PNG, SVG & clipboard.
-- 💾&nbsp;Open format - export drawings as an `.excalidraw` json file.
-- ⚒️&nbsp;Wide range of tools - rectangle, circle, diamond, arrow, line, free-draw, eraser...
-- ➡️&nbsp;Arrow-binding & labeled arrows.
-- 🔙&nbsp;Undo / Redo.
-- 🔍&nbsp;Zoom and panning support.
+## My Contribution
 
-## Excalidraw.com
+### Issue #11933 – Preserve Remote Element Versions During Fractional-Index Healing
 
-The app hosted at [excalidraw.com](https://excalidraw.com) is a minimal showcase of what you can build with Excalidraw. Its [source code](https://github.com/excalidraw/excalidraw/tree/master/excalidraw-app) is part of this repository as well, and the app features:
+**Problem**
 
-- 📡&nbsp;PWA support (works offline).
-- 🤼&nbsp;Real-time collaboration.
-- 🔒&nbsp;End-to-end encryption.
-- 💾&nbsp;Local-first support (autosaves to the browser).
-- 🔗&nbsp;Shareable links (export to a readonly link you can share with others).
+When `updateScene` received remote elements with invalid or missing fractional indices, the index-healing process could modify their version-related properties.
 
-We'll be adding these features as drop-in plugins for the npm package in the future.
+This caused an unintended version increment during remote scene updates.
 
-## Quick start
+As a result, `reconcileElements` could incorrectly discard genuine remote edits because the element-version comparison no longer reflected the original remote update.
 
-**Note:** following instructions are for installing the Excalidraw [npm package](https://www.npmjs.com/package/@excalidraw/excalidraw) when integrating Excalidraw into your own app. To run the repository locally for development, please refer to our [Development Guide](https://docs.excalidraw.com/docs/introduction/development).
+**My Objective**
 
-Use `npm` or `yarn` to install the package.
+Fix the version-preservation issue without changing the existing behavior for normal local element updates.
 
+### Solution Implemented
+
+I worked on the scene replacement and fractional-index synchronization logic.
+
+The changes include:
+
+1. Updated `App.updateScene` to enable version preservation for updates using `CaptureUpdateAction.NEVER`.
+2. Updated `Scene.replaceAllElements` to pass the version-preservation option into fractional-index synchronization.
+3. Updated `syncInvalidIndices` to preserve:
+   - `version`
+   - `versionNonce`
+   - `updated`
+4. Retained the existing version-incrementing behavior when preservation is not requested.
+5. Added a regression test covering repeated index healing and remote edit reconciliation.
+
+### Files Modified
+
+| File | Contribution |
+|---|---|
+| `packages/excalidraw/components/App.tsx` | Passes version-preservation behavior for remote scene updates |
+| `packages/element/src/Scene.ts` | Forwards preservation options during scene replacement |
+| `packages/element/src/fractionalIndex.ts` | Preserves element version properties during index healing |
+| `packages/excalidraw/tests/App.test.tsx` | Adds regression coverage for remote edit reconciliation |
+
+## Testing and Validation
+
+The following test suites were used:
+
+**Fractional-index tests**
 ```bash
-npm install react react-dom @excalidraw/excalidraw
-# or
-yarn add react react-dom @excalidraw/excalidraw
+corepack yarn test:app packages/element/tests/fractionalIndex.test.ts --run
 ```
 
-Check out our [documentation](https://docs.excalidraw.com/docs/@excalidraw/excalidraw/installation) for more details!
+Previously verified: 54 tests passed.
 
-## Contributing
+**App regression tests**
+```bash
+corepack yarn test:app packages/excalidraw/tests/App.test.tsx --run
+```
 
-- Missing something or found a bug? [Report here](https://github.com/excalidraw/excalidraw/issues).
-- Want to contribute? Check out our [contribution guide](https://docs.excalidraw.com/docs/introduction/contributing) or let us know on [Discord](https://discord.gg/UexuTaE).
-- Want to help with translations? See the [translation guide](https://docs.excalidraw.com/docs/introduction/contributing#translating).
+Latest verified result: 2 tests passed.
 
-## Integrations
+The regression test checks that:
+- Remote element versions remain unchanged during repeated index healing.
+- The original `versionNonce` is preserved.
+- A newer remote edit is correctly accepted during reconciliation.
 
-- [VScode extension](https://marketplace.visualstudio.com/items?itemName=pomdtr.excalidraw-editor)
-- [npm package](https://www.npmjs.com/package/@excalidraw/excalidraw)
+## Technology Stack
 
-## Who's integrating Excalidraw
+- TypeScript
+- React
+- Yarn
+- Vitest
+- Git and GitHub
+- Fractional indexing
+- Collaborative scene synchronization
 
-[Google Cloud](https://googlecloudcheatsheet.withgoogle.com/architecture) • [Meta](https://meta.com/) • [CodeSandbox](https://codesandbox.io/) • [Obsidian Excalidraw](https://github.com/zsviczian/obsidian-excalidraw-plugin) • [Replit](https://replit.com/) • [Slite](https://slite.com/) • [Notion](https://notion.so/) • [HackerRank](https://www.hackerrank.com/) • and many others
+## GitHub Contribution Details
 
-## Sponsors & support
+**Contribution branch:**
+```text
+fix/remote-update-scene-version-preservation
+```
 
-If you like the project, you can become a sponsor at [Open Collective](https://opencollective.com/excalidraw) or use [Excalidraw+](https://plus.excalidraw.com/).
+**Commit:**
+```text
+90c230ffb
+```
 
-## Thank you for supporting Excalidraw
+**Commit message:**
+```text
+fix: preserve remote element versions during index healing
+```
 
-[<img src="https://opencollective.com/excalidraw/tiers/sponsors/0/avatar.svg?avatarHeight=120"/>](https://opencollective.com/excalidraw/tiers/sponsors/0/website) [<img src="https://opencollective.com/excalidraw/tiers/sponsors/1/avatar.svg?avatarHeight=120"/>](https://opencollective.com/excalidraw/tiers/sponsors/1/website) [<img src="https://opencollective.com/excalidraw/tiers/sponsors/2/avatar.svg?avatarHeight=120"/>](https://opencollective.com/excalidraw/tiers/sponsors/2/website) [<img src="https://opencollective.com/excalidraw/tiers/sponsors/3/avatar.svg?avatarHeight=120"/>](https://opencollective.com/excalidraw/tiers/sponsors/3/website) [<img src="https://opencollective.com/excalidraw/tiers/sponsors/4/avatar.svg?avatarHeight=120"/>](https://opencollective.com/excalidraw/tiers/sponsors/4/website) [<img src="https://opencollective.com/excalidraw/tiers/sponsors/5/avatar.svg?avatarHeight=120"/>](https://opencollective.com/excalidraw/tiers/sponsors/5/website) [<img src="https://opencollective.com/excalidraw/tiers/sponsors/6/avatar.svg?avatarHeight=120"/>](https://opencollective.com/excalidraw/tiers/sponsors/6/website) [<img src="https://opencollective.com/excalidraw/tiers/sponsors/7/avatar.svg?avatarHeight=120"/>](https://opencollective.com/excalidraw/tiers/sponsors/7/website) [<img src="https://opencollective.com/excalidraw/tiers/sponsors/8/avatar.svg?avatarHeight=120"/>](https://opencollective.com/excalidraw/tiers/sponsors/8/website) [<img src="https://opencollective.com/excalidraw/tiers/sponsors/9/avatar.svg?avatarHeight=120"/>](https://opencollective.com/excalidraw/tiers/sponsors/9/website) [<img src="https://opencollective.com/excalidraw/tiers/sponsors/10/avatar.svg?avatarHeight=120"/>](https://opencollective.com/excalidraw/tiers/sponsors/10/website)
+**Pull request target:** `excalidraw/excalidraw` → `master`
 
-<a href="https://opencollective.com/excalidraw#category-CONTRIBUTE" target="_blank"><img src="https://opencollective.com/excalidraw/tiers/backers.svg?avatarHeight=32"/></a>
+## What I Learned
 
-Last but not least, we're thankful to these companies for offering their services for free:
+Through this engineering challenge, I gained practical experience with:
 
-[![Vercel](./.github/assets/vercel.svg)](https://vercel.com) [![Sentry](./.github/assets/sentry.svg)](https://sentry.io) [![Crowdin](./.github/assets/crowdin.svg)](https://crowdin.com)
+- Navigating and understanding an existing large TypeScript codebase.
+- Tracing bugs across application, scene, and element-management layers.
+- Understanding version-based conflict resolution.
+- Working with fractional indexing and element synchronization.
+- Writing regression tests for collaborative application behavior.
+- Using Git branches, commits, and GitHub forks to manage open-source contributions.
+
+## Acknowledgements
+
+Thanks to the Excalidraw maintainers and open-source community for providing an opportunity to explore and contribute to a real-world collaborative application.
+
+---
+
+**Author:** Varun
+
+**Repository:** [Excalidraw Engineering Challenge](https://github.com/Varunbabar/excalidraw-engineering-challenge)
+
+**Original Project:** [Excalidraw](https://github.com/excalidraw/excalidraw)
